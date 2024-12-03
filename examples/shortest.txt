@@ -1,0 +1,16 @@
+The program:
+Your program must output number of lowercase letters in program.
+
+INPUT:
+A word
+
+OUTPUT:
+Number of lowercase letters
+
+EXAMPLE:
+Input
+GrEeN
+Output
+3
+ 
+

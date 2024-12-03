@@ -18,14 +18,12 @@ Factorial of the number
 1 ≤ n ≤ 10
 ```
 
-> Example
-
-`Input`
-```
-4
-```
-
-`Output`
-```
-24
-```
+**Example**
+> __Input:__
+> ```
+> 4
+> ```
+> __Output:__
+> ```
+> 24
+> ```

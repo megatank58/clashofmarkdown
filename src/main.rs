@@ -34,7 +34,8 @@ fn main() {
     let output = match *lines.peek().unwrap() {
         "The game mode is REVERSE: You do not have access to the statement. You have to guess what to do by observing the following set of tests:" => parse_reverse(lines),
         "Goal" => parse_fastest(lines),
-        _ => unimplemented!()
+        "The program:" => parse_shortest(lines),
+        _ => panic!("cannot comprehend the type of clashofcode round")
     };
 
     write(
@@ -44,42 +45,64 @@ fn main() {
     .unwrap();
 }
 
+fn parse_shortest(mut lines: Peekable<Lines>) -> String {
+    let header = "**The program:**";
+
+    lines.next().unwrap();
+
+    let (lines, question) = consume(lines, "INPUT:");
+
+    let (lines, input) = consume(lines, "OUTPUT:");
+
+    let (mut lines, output) = consume(lines, "EXAMPLE:");
+
+    let mut example_input = String::new();
+    let mut example_output = String::new();
+    let mut flag = false;
+
+    assert!(lines.next().unwrap() == "Input");
+
+    loop {
+        let line = lines.next();
+
+        if line.is_none() {
+            break;
+        }
+
+        let line = line.unwrap();
+
+        if line == "Output" {
+            if !flag {
+                flag = true;
+                continue;
+            } else {
+                break;
+            }
+        }
+
+        if line.is_empty() {
+            continue;
+        }
+
+        if !flag {
+            example_input += &(line.to_owned() + "\n");
+        } else {
+            example_output += &(line.to_owned() + "\n");
+        }
+    }
+
+    format!(
+        "{header}\n\n{}\n\n`Input`\n```\n{input}```\n\n`Output`\n```\n{output}```\n\n**Example**\n> __Input:__\n> ```\n{}\n> ```\n> __Output:__\n> ```\n{}\n> ```",
+        question.lines().map(|f| format!("> {f}")).collect::<Vec<String>>().join("\n"),
+        example_input.lines().map(|f| format!("> {f}")).collect::<Vec<String>>().join("\n"),
+        example_output.lines().map(|f| format!("> {f}")).collect::<Vec<String>>().join("\n")
+    )
+}
+
 fn parse_fastest(mut lines: Peekable<Lines>) -> String {
     let header = "**Goal**";
 
     lines.next().unwrap();
-
-    fn consume<'a>(
-        mut lines: Peekable<Lines<'a>>,
-        stop_at: &'a str,
-    ) -> (Peekable<Lines<'a>>, String) {
-        let mut output = String::new();
-
-        loop {
-            if lines.peek().is_none() {
-                break;
-            }
-
-            let line = *lines.peek().unwrap();
-
-            if line == stop_at {
-                lines.next().unwrap();
-                break;
-            }
-
-            lines.next().unwrap();
-
-            if line.is_empty() {
-                continue;
-            }
-
-            let line = line.replace("*", r"\*");
-
-            output += &(line.trim().to_owned() + "\n");
-        }
-
-        (lines, output)
-    }
 
     let (lines, question) = consume(lines, "Input");
 
@@ -125,8 +148,11 @@ fn parse_fastest(mut lines: Peekable<Lines>) -> String {
     }
 
     format!(
-        "{header}\n\n{}\n\n`Input`\n```\n{input}```\n\n`Output`\n```\n{output}```\n\n`Constraints`\n```\n{constraints}```\n\n> Example\n\n`Input`\n```\n{example_input}```\n\n`Output`\n```\n{example_output}```",
-        question.lines().map(|f| format!("> {f}")).collect::<Vec<String>>().join("\n")
+        "{header}\n\n{}\n\n`Input`\n```\n{input}```\n\n`Output`\n```\n{output}```\n\n`Constraints`\n```\n{constraints}```\n\n**Example**\n> __Input:__\n> ```\n{}\n> ```\n> __Output:__\n> ```\n{}\n> ```",
+        question.lines().map(|f| format!("> {f}")).collect::<Vec<String>>().join("\n"),
+        example_input.lines().map(|f| format!("> {f}")).collect::<Vec<String>>().join("\n"),
+        example_output.lines().map(|f| format!("> {f}")).collect::<Vec<String>>().join("\n")
+
     )
 }
 
@@ -196,10 +222,49 @@ fn parse_reverse(mut lines: Peekable<Lines>) -> String {
         tests
             .iter()
             .map(|f| format!(
-                "> `Test{}`\n\n__Input__\n{}\n\n__Expected output__\n{}\n",
-                f.index, f.input, f.output
+                "**Test{}**\n> __Input:__\n{}\n> __Output:__\n{}\n",
+                f.index,
+                f.input
+                    .lines()
+                    .map(|f| format!("> {f}"))
+                    .collect::<Vec<String>>()
+                    .join("\n"),
+                f.output
+                    .lines()
+                    .map(|f| format!("> {f}"))
+                    .collect::<Vec<String>>()
+                    .join("\n")
             ))
             .collect::<Vec<String>>()
             .join("\n")
     )
+}
+
+fn consume<'a>(mut lines: Peekable<Lines<'a>>, stop_at: &'a str) -> (Peekable<Lines<'a>>, String) {
+    let mut output = String::new();
+
+    loop {
+        if lines.peek().is_none() {
+            break;
+        }
+
+        let line = *lines.peek().unwrap();
+
+        if line == stop_at {
+            lines.next().unwrap();
+            break;
+        }
+
+        lines.next().unwrap();
+
+        if line.is_empty() {
+            continue;
+        }
+
+        let line = line.replace("*", r"\*");
+
+        output += &(line.trim().to_owned() + "\n");
+    }
+
+    (lines, output)
 }
